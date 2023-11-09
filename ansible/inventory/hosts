@@ -1,0 +1,3 @@
+[database]
+server1 ansible_host=ip_servidor_1
+server2 ansible_host=ip_servidor_2

@@ -1,0 +1,58 @@
+---
+- name: Configure PostgreSQL with HA and TimescaleDB
+  hosts: database
+  become: yes
+  vars:
+    data_partition: /data
+
+  tasks:
+    - name: Update system packages
+      apt:
+        update_cache: yes
+
+    - name: Install PostgreSQL
+      apt:
+        name: postgresql
+        state: present
+
+    - name: Install TimescaleDB extension
+      apt:
+        name: postgresql-13-timescaledb
+        state: present
+
+    - name: Stop PostgreSQL service
+      service:
+        name: postgresql
+        state: stopped
+
+    - name: Create a data directory on the data partition
+      file:
+        path: "{{ data_partition }}/pgdata"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0700'
+
+    - name: Initialize the primary PostgreSQL database
+      command: >
+        pg_basebackup -h localhost -D {{ data_partition }}/pgdata
+        -U replicator -v -P --wal-method=stream
+        creates={{ data_partition }}/pgdata
+
+    - name: Configure PostgreSQL for replication
+      template:
+        src: pg_hba.conf.j2
+        dest: "{{ data_partition }}/pgdata/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: '0600'
+
+    - name: Start PostgreSQL service
+      service:
+        name: postgresql
+        state: started
+
+    - name: Enable and start TimescaleDB background job scheduler
+      command: psql -d mydb -c "SELECT prometheus.enable_prometheus_bgw();"
+      become_user: postgres
+
