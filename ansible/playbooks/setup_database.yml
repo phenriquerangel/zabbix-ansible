@@ -1,0 +1,39 @@
+---
+- name: Configurar PostgreSQL e TimescaleDB
+  hosts: database_servers
+  become: true
+
+  tasks:
+    - name: Instalar PostgreSQL e TimescaleDB
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - postgresql
+        - timescaledb
+
+    - name: Configurar PostgreSQL
+      postgresql_user:
+        name: my_user
+        password: my_password
+        state: present
+
+    - name: Configurar TimescaleDB
+      postgresql_db:
+        name: my_database
+        encoding: UTF-8
+        lc_collate: 'en_US.UTF-8'
+        lc_ctype: 'en_US.UTF-8'
+        owner: my_user
+        state: present
+
+    - name: Configurar replicação
+      postgresql_replication:
+        primary_conninfo: "host=IP_SERVIDOR_1 port=5432 user=my_user password=my_password"
+        standby_mode: "true"
+      when: inventory_hostname == "db_server2"
+
+    - name: Configurar exportação para /data
+      file:
+        path: /data
+        state: directory

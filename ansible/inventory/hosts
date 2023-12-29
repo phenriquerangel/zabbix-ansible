@@ -1,3 +1,7 @@
-[database]
-server1 ansible_host=ip_servidor_1
-server2 ansible_host=ip_servidor_2
+[database_servers]
+db_server1 ansible_host=IP_SERVIDOR_1
+db_server2 ansible_host=IP_SERVIDOR_2
+
+[zabbix_servers]
+zabbix_server1 ansible_host=IP_SERVIDOR_3
+zabbix_server2 ansible_host=IP_SERVIDOR_4
