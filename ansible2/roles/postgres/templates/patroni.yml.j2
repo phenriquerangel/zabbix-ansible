@@ -1,0 +1,26 @@
+scope: postgres
+namespace: /db/
+name: {{ ansible_hostname }}
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: '{{ ansible_host }}:8008'
+postgresql:
+  listen: '{{ ansible_host }}:5432'
+  connect_address: '{{ ansible_host }}:5432'
+  data_dir: /data/{{ postgresql_version }}/main
+  pgpass: /tmp/pgpass
+  authentication:
+    replication:
+      username: replication
+      password: "{{ postgres_replication_password }}"
+    superuser:
+      username: postgres
+      password: "{{ postgres_password }}"
+    admin:
+      username: admin
+      password: "{{ postgres_admin_password }}"
+  parameters:
+    unix_socket_directories: '/var/run/postgresql'
+  callbacks:
+    on_role_change: /etc/patroni/scripts/ha.sh
+tags: replication

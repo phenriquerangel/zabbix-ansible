@@ -1,0 +1,74 @@
+---
+- name: Install PostgreSQL and TimescaleDB
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - postgresql
+    - postgresql-contrib
+    - timescaledb-postgresql-{{ postgresql_version }}
+    - patroni
+
+- name: Configure PostgreSQL data directory
+  ansible.builtin.shell:
+    cmd: "mkdir -p /data"
+    creates: /data
+
+- name: Configure PostgreSQL settings
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
+  notify: restart postgresql
+
+- name: Start and enable PostgreSQL service
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Configure Patroni
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni.yml
+  notify: restart patroni
+
+- name: Initialize Patroni
+  ansible.builtin.shell:
+    cmd: "patronictl -c /etc/patroni.yml initdb -w 30"
+    creates: /data/initialized
+
+- name: Start Patroni
+  ansible.builtin.service:
+    name: patroni
+    state: started
+    enabled: yes
+  notify: restart postgresql
+
+- name: Enable TimescaleDB on PostgreSQL
+  postgresql_db:
+    name: "{{ timescaledb_db_name }}"
+    login_host: localhost
+    login_user: postgres
+    login_password: "{{ postgres_password }}"
+    state: present
+  notify: restart postgresql
+
+- name: Configure Streaming Replication
+  postgresql_replication:
+    name: "{{ item }}"
+    master_host: "{{ ansible_host }}"
+    slave_host: "{{ hostvars[item].ansible_host }}"
+    login_user: postgres
+    login_password: "{{ postgres_password }}"
+    port: "{{ postgres_port }}"
+  loop: "{{ groups['postgres_servers'] | difference([ansible_hostname]) }}"
+
+- handlers:
+  - name: restart postgresql
+    ansible.builtin.service:
+      name: postgresql
+      state: restarted
+  - name: restart patroni
+    ansible.builtin.service:
+      name: patroni
+      state: restarted

@@ -1,0 +1,6 @@
+postgresql_version: "13"
+postgres_port: 5432
+postgres_password: "senha_padrao"
+postgres_replication_password: "senha_replicacao_padrao"
+postgres_admin_password: "senha_admin_padrao"
+timescaledb_db_name: "zabbix"

@@ -1,0 +1,12 @@
+---
+- hosts: postgres_servers
+  become: true
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - postgres
+
+- hosts: zabbix_server
+  become: true
+  roles:
+    - zabbix

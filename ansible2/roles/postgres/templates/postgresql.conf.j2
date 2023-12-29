@@ -1,0 +1,11 @@
+# PostgreSQL Config
+data_directory = '/data'
+listen_addresses = '*'
+port = {{ postgres_port }}
+max_wal_size = '2GB'
+wal_level = 'replica'
+archive_mode = 'on'
+archive_command = 'cd .'
+
+# TimescaleDB Config
+shared_preload_libraries = 'timescaledb'

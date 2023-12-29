@@ -1,0 +1,57 @@
+---
+- name: Install Zabbix Server
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - zabbix-server-pgsql
+    - zabbix-frontend-php
+    - zabbix-agent
+
+- name: Configure Zabbix Database
+  template:
+    src: zabbix_create.sql.j2
+    dest: /tmp/zabbix_create.sql
+  notify: restart zabbix-server-pgsql
+
+- name: Create Zabbix Database
+  postgresql_db:
+    name: zabbix
+    login_host: localhost
+    login_user: postgres
+    login_password: "{{ postgres_password }}"
+    state: present
+  notify: restart zabbix-server-pgsql
+
+- name: Import Zabbix Database Schema
+  postgresql_db:
+    name: zabbix
+    login_host: localhost
+    login_user: postgres
+    login_password: "{{ postgres_password }}"
+    state: import
+    target: /tmp/zabbix_create.sql
+  notify: restart zabbix-server-pgsql
+
+- name: Start and enable Zabbix Server
+  ansible.builtin.service:
+    name: zabbix-server-pgsql
+    state: started
+    enabled: yes
+  notify: restart zabbix-agent
+
+- name: Start and enable Zabbix Agent
+  ansible.builtin.service:
+    name: zabbix-agent
+    state: started
+    enabled: yes
+
+handlers:
+  - name: restart zabbix-server-pgsql
+    ansible.builtin.service:
+      name: zabbix-server-pgsql
+      state: restarted
+  - name: restart zabbix-agent
+    ansible.builtin.service:
+      name: zabbix-agent
+      state: restarted

@@ -1,0 +1,20 @@
+-- Zabbix Database Schema
+-- Replace with the actual Zabbix version you are using
+
+-- Drop the existing database if it exists
+DROP DATABASE IF EXISTS zabbix;
+
+-- Create a new database
+CREATE DATABASE zabbix WITH ENCODING 'UTF8' LC_COLLATE='C' LC_CTYPE='C' TEMPLATE template0;
+
+-- Grant necessary privileges
+GRANT ALL PRIVILEGES ON DATABASE zabbix TO postgres;
+
+-- Connect to the new database
+\c zabbix;
+
+-- Import Zabbix database schema from SQL file
+\i /usr/share/doc/zabbix-server-pgsql*/create.sql.gz;
+
+-- Exit from PostgreSQL console
+\q;
