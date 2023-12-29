@@ -1,24 +1,32 @@
 ---
-- name: Configurar Zabbix Server e Web
+- name: Configurar servidores Zabbix
   hosts: zabbix_servers
-  become: true
-
+  vars_files:
+    - vars.yml 
   tasks:
-    - name: Instalar Zabbix Server e Web
+    - name: Instalar Zabbix Server
       apt:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - zabbix-server-pgsql
-        - zabbix-frontend-php
-        - zabbix-frontend-apache
+        name: ['zabbix-server-pgsql', 'zabbix-frontend-php', 'zabbix-frontend-apache']
 
-    - name: Copiar arquivos de configuração do Zabbix Server
-      copy:
-        src: files/zabbix_server.conf
+    - name: Configurar Zabbix Server
+      template:
+        src: zabbix_server.conf.j2
         dest: /etc/zabbix/zabbix_server.conf
+      notify: Restart Zabbix Server
 
-    - name: Copiar arquivos de configuração do Zabbix Web
-      copy:
-        src: files/zabbix.conf.php
-        dest: /etc/zabbix/web/zabbix.conf.php
+    - name: Configurar Zabbix Web
+      template:
+        src: apache2.conf.j2
+        dest: /etc/apache2/sites-available/000-default.conf
+      notify: Restart Apache
+
+  handlers:
+    - name: Restart Zabbix Server
+      service:
+        name: zabbix-server
+        state: restarted
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted

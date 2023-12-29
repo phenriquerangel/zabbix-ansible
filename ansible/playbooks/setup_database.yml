@@ -1,39 +1,38 @@
 ---
-- name: Configurar PostgreSQL e TimescaleDB
-  hosts: database_servers
-  become: true
-
+- name: Configurar servidores PostgreSQL
+  hosts: postgres_servers
+  vars_files:
+    - vars.yml 
   tasks:
     - name: Instalar PostgreSQL e TimescaleDB
       apt:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - postgresql
-        - timescaledb
+        name: ['postgresql', 'postgresql-contrib', 'timescaledb-postgresql']
 
     - name: Configurar PostgreSQL
-      postgresql_user:
-        name: my_user
-        password: my_password
-        state: present
+      template:
+        src: postgresql.conf.j2
+        dest: /etc/postgresql/{{ postgres_version }}/main/postgresql.conf
+      notify: Restart PostgreSQL
 
     - name: Configurar TimescaleDB
-      postgresql_db:
-        name: my_database
-        encoding: UTF-8
-        lc_collate: 'en_US.UTF-8'
-        lc_ctype: 'en_US.UTF-8'
-        owner: my_user
-        state: present
+      command: sudo -u postgres psql -d {{ db_name }} -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
+      notify: Restart PostgreSQL
 
     - name: Configurar replicação
-      postgresql_replication:
-        primary_conninfo: "host=IP_SERVIDOR_1 port=5432 user=my_user password=my_password"
-        standby_mode: "true"
-      when: inventory_hostname == "db_server2"
+      template:
+        src: pg_hba.conf.j2
+        dest: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+      notify: Restart PostgreSQL
 
-    - name: Configurar exportação para /data
+    - name: Criar diretório de dados
       file:
         path: /data
         state: directory
+        owner: postgres
+        group: postgres
+
+  handlers:
+    - name: Restart PostgreSQL
+      service:
+        name: postgresql
+        state: restarted

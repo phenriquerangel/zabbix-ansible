@@ -1,0 +1,6 @@
+---
+- name: Ping para o Google
+  hosts: [database_servers,zabbix_servers]
+  tasks:
+    - name: Ping para o Google
+      command: ping -c 4 google.com

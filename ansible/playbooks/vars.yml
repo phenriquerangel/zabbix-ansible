@@ -1,0 +1,8 @@
+
+db_name: mydatabase
+db_user: myuser
+db_password: mypassword
+zabbix_web_server_name: zabbix-web-server
+
+zabbix_server_1: ip_do_servidor_3
+zabbix_server_2: ip_do_servidor_4

@@ -1,0 +1,11 @@
+# Configurações do HAProxy para balanceamento de carga
+frontend zabbix-web
+    bind *:80
+    mode http
+    default_backend zabbix-web-servers
+
+backend zabbix-web-servers
+    mode http
+    balance roundrobin
+    server zabbix-server-1 {{ zabbix_server_1 }}:80 check
+    server zabbix-server-2 {{ zabbix_server_2 }}:80 check

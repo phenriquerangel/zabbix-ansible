@@ -1,0 +1,21 @@
+---
+- name: Configurar HAProxy
+  hosts: haproxy_server
+  vars_files:
+    - vars.yml 
+  tasks:
+    - name: Instalar HAProxy
+      apt:
+        name: haproxy
+
+    - name: Configurar HAProxy
+      template:
+        src: haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+      notify: Restart HAProxy
+
+  handlers:
+    - name: Restart HAProxy
+      service:
+        name: haproxy
+        state: restarted
