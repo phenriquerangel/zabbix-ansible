@@ -1,4 +1,16 @@
 ---
+- name: Add TimescaleDB repository key
+  apt_key:
+    url: https://packagecloud.io/timescale/timescaledb/gpgkey
+    state: present
+
+- name: Add TimescaleDB APT repository
+  apt_repository:
+    repo: "deb https://packagecloud.io/timescale/timescaledb/ubuntu/ {{ ansible_distribution_release }} main"
+    state: present
+    filename: "timescaledb"
+    update_cache: yes
+
 - name: Install PostgreSQL and TimescaleDB
   apt:
     name: "{{ item }}"
@@ -6,7 +18,7 @@
   loop:
     - postgresql
     - postgresql-contrib
-    - timescaledb-postgresql-{{ postgresql_version }}
+    - timescaledb-2-postgresql-{{ postgresql_version }}
     - patroni
 
 - name: Configure PostgreSQL data directory
@@ -53,22 +65,22 @@
     state: present
   notify: restart postgresql
 
-- name: Configure Streaming Replication
-  postgresql_replication:
-    name: "{{ item }}"
-    master_host: "{{ ansible_host }}"
-    slave_host: "{{ hostvars[item].ansible_host }}"
-    login_user: postgres
-    login_password: "{{ postgres_password }}"
-    port: "{{ postgres_port }}"
-  loop: "{{ groups['postgres_servers'] | difference([ansible_hostname]) }}"
+#- name: Configure Streaming Replication
+#  postgresql_replication:
+#    name: "{{ item }}"
+#    master_host: "{{ ansible_host }}"
+#    slave_host: "{{ hostvars[item].ansible_host }}"
+#    login_user: postgres
+#    login_password: "{{ postgres_password }}"
+#    port: "{{ postgres_port }}"
+#  loop: "{{ groups['postgres_servers'] | difference([ansible_hostname]) }}"
 
-- handlers:
-  - name: restart postgresql
-    ansible.builtin.service:
-      name: postgresql
-      state: restarted
-  - name: restart patroni
-    ansible.builtin.service:
-      name: patroni
-      state: restarted
+#- handlers:
+#  - name: restart postgresql
+#    ansible.builtin.service:
+#      name: postgresql
+#      state: restarted
+#  - name: restart patroni
+#    ansible.builtin.service:
+#      name: patroni
+#      state: restarted

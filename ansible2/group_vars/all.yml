@@ -1,6 +1,6 @@
 # ansible/group_vars/all.yml
 ---
-postgresql_version: "13"  # ou a versão desejada do PostgreSQL
+postgresql_version: "15"  # ou a versão desejada do PostgreSQL
 postgres_port: 5432
 postgres_password: "sua_senha_postgres"
 postgres_replication_password: "sua_senha_replicacao"
