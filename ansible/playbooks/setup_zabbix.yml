@@ -20,6 +20,10 @@
         dest: /etc/apache2/sites-available/000-default.conf
       notify: Restart Apache
 
+    - name: Import Zabbix database schema
+      command: "zcat /usr/share/doc/zabbix-server-pgsql/create.sql.gz | psql -h {{ database_server_1 }} -U {{ zabbix_db_user }} -d {{ zabbix_db_name }} -W"
+      become: yes
+
   handlers:
     - name: Restart Zabbix Server
       service:

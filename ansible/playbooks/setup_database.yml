@@ -1,9 +1,25 @@
 ---
 - name: Configurar servidores PostgreSQL
-  hosts: postgres_servers
+  hosts: database_servers
+  become: yes
+  become_user: root
   vars_files:
-    - vars.yml 
+    - vars.yml
+    - vault.yml
+  vars:
+    #ansible_become_pass_file: vault.yml
+    ansible_become_pass: 12345
   tasks:
+    - name: Add PostgreSQL repository key
+      apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+        
+    - name: Add PostgreSQL repository
+      apt_repository:
+        repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+        state: present  
+        
     - name: Instalar PostgreSQL e TimescaleDB
       apt:
         name: ['postgresql', 'postgresql-contrib', 'timescaledb-postgresql']
